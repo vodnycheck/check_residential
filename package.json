@@ -1,0 +1,27 @@
+{
+  "name": "pio-website-checker",
+  "version": "1.0.0",
+  "description": "Automated PIO website checker with data comparison and macOS notifications",
+  "main": "pio-checker.js",
+  "scripts": {
+    "start": "node pio-checker.js",
+    "check": "node pio-checker.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "node-notifier": "^10.0.1",
+    "nodemailer": "^7.0.6",
+    "puppeteer": "^21.3.6"
+  },
+  "keywords": [
+    "automation",
+    "website-monitoring",
+    "data-comparison",
+    "puppeteer",
+    "notifications",
+    "pio"
+  ],
+  "author": "",
+  "license": "MIT"
+}
