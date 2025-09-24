@@ -6,15 +6,16 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 class PIOChecker {
-    constructor() {
-        this.dataDir = path.join(__dirname, 'data');
+    constructor(accountConfig) {
+        this.accountId = accountConfig.login; // Use login as account ID
+        this.dataDir = path.join(__dirname, 'data', this.accountId);
         this.loginUrl = 'https://pio-przybysz.duw.pl/login';
         this.wniosikiUrl = 'https://pio-przybysz.duw.pl/wnioski-przyjete';
-        this.login = process.env.LOGIN;
-        this.password = process.env.PASSWORD;
-        this.elementText = process.env.ELEMENT_TEXT;
+        this.login = accountConfig.login;
+        this.password = accountConfig.password;
+        this.elementText = accountConfig.elementText;
 
-        // Gmail configuration
+        // Gmail configuration from environment variables
         this.gmailUser = process.env.mail;
         this.gmailPass = process.env.pass;
 
@@ -23,13 +24,13 @@ class PIOChecker {
             fs.mkdirSync(this.dataDir, { recursive: true });
         }
 
-        // Validate required environment variables
+        // Validate required configuration
         if (!this.login || !this.password || !this.elementText) {
-            throw new Error('Missing required environment variables: LOGIN, PASSWORD, or ELEMENT_TEXT');
+            throw new Error(`Missing required configuration for account ${this.accountId}: login, password, or elementText`);
         }
 
         if (!this.gmailUser || !this.gmailPass) {
-            console.warn('Warning: Gmail credentials not found. Email notifications will be disabled.');
+            console.warn(`Warning: Gmail credentials not found in environment variables. Email notifications will be disabled.`);
         }
 
         // Configure Gmail transporter
@@ -279,7 +280,7 @@ class PIOChecker {
         const filepath = path.join(this.dataDir, filename);
 
         fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
-        console.log(`Data saved to: ${filename}`);
+        console.log(`[${this.accountId}] Data saved to: ${filename}`);
         return filepath;
     }
 
@@ -312,7 +313,7 @@ class PIOChecker {
 
     sendNotification(title, message) {
         notifier.notify({
-            title: title,
+            title: `${title} - ${this.accountId}`,
             message: message,
             sound: true,
             wait: false
@@ -321,7 +322,7 @@ class PIOChecker {
 
     async sendEmail(subject, message, changes = null, previousData = null, currentData = null) {
         if (!this.mailTransporter) {
-            console.log('Email notifications disabled - Gmail credentials not configured');
+            console.log(`[${this.accountId}] Email notifications disabled - Gmail credentials not configured`);
             return;
         }
 
@@ -335,15 +336,15 @@ class PIOChecker {
         const mailOptions = {
             from: this.gmailUser,
             to: this.gmailUser,
-            subject: subject,
+            subject: `${subject} - Account: ${this.accountId}`,
             html: emailContent
         };
 
         try {
             const info = await this.mailTransporter.sendMail(mailOptions);
-            console.log('Email sent successfully: ' + info.response);
+            console.log(`[${this.accountId}] Email sent successfully: ` + info.response);
         } catch (error) {
-            console.log('Error sending email:', error);
+            console.log(`[${this.accountId}] Error sending email:`, error);
         }
     }
 
@@ -352,6 +353,7 @@ class PIOChecker {
 
         let html = `
             <h2>PIO Application Status Update</h2>
+            <p><strong>Account:</strong> ${this.accountId}</p>
             <p><strong>Time:</strong> ${timestamp}</p>
             <p><strong>Application Number:</strong> ${this.elementText}</p>
             <p><strong>Changes Detected:</strong></p>
@@ -383,7 +385,7 @@ class PIOChecker {
         html += `
             <hr>
             <p><strong>Application URL:</strong> <a href="${currentData.url}">${currentData.url}</a></p>
-            <p><em>This is an automated notification from PIO Checker.</em></p>
+            <p><em>This is an automated notification from PIO Checker for account ${this.accountId}.</em></p>
         `;
 
         return html;
@@ -416,17 +418,17 @@ class PIOChecker {
 
     async run() {
         try {
-            console.log('Starting PIO website check...');
+            console.log(`[${this.accountId}] Starting PIO website check...`);
 
             // Get latest data file
             const latestFile = this.getLatestDataFile();
             let previousData = null;
 
             if (latestFile) {
-                console.log(`Found previous data: ${path.basename(latestFile)}`);
+                console.log(`[${this.accountId}] Found previous data: ${path.basename(latestFile)}`);
                 previousData = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
             } else {
-                console.log('No previous data found - this is the first run');
+                console.log(`[${this.accountId}] No previous data found - this is the first run`);
             }
 
             // Scrape current data
@@ -436,7 +438,7 @@ class PIOChecker {
             this.saveData(currentData);
 
             if (!previousData) {
-                console.log('✅ First run completed - baseline data saved');
+                console.log(`[${this.accountId}] ✅ First run completed - baseline data saved`);
                 this.sendNotification(
                     'PIO Checker - First Run',
                     'Baseline data has been saved. Future runs will detect changes.'
@@ -449,13 +451,13 @@ class PIOChecker {
             const changes = this.compareData(previousData, currentData);
 
             if (changes.length === 0) {
-                console.log('✅ No changes detected');
+                console.log(`[${this.accountId}] ✅ No changes detected`);
                 this.sendNotification(
                     'PIO Checker - No Changes',
                     'Your application status remains unchanged.'
                 );
             } else {
-                console.log('🔔 Changes detected:');
+                console.log(`[${this.accountId}] 🔔 Changes detected:`);
                 changes.forEach(change => console.log(`  - ${change}`));
 
                 this.sendNotification(
@@ -474,7 +476,7 @@ class PIOChecker {
             }
 
         } catch (error) {
-            console.error('Error during check:', error);
+            console.error(`[${this.accountId}] Error during check:`, error);
             this.sendNotification(
                 'PIO Checker - Error',
                 `An error occurred: ${error.message}`
@@ -484,6 +486,7 @@ class PIOChecker {
             await this.sendEmail(
                 'PIO Checker - Error Occurred',
                 `<h2>PIO Checker - Error Report</h2>
+                 <p><strong>Account:</strong> ${this.accountId}</p>
                  <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
                  <p><strong>Error:</strong> ${error.message}</p>
                  <p>The PIO checker encountered an error while trying to check your application status.</p>
@@ -494,10 +497,86 @@ class PIOChecker {
     }
 }
 
-// Run the checker
-if (require.main === module) {
-    const checker = new PIOChecker();
-    checker.run();
+class MultiAccountChecker {
+    constructor() {
+        this.accounts = this.loadAccountsConfig();
+    }
+
+    loadAccountsConfig() {
+        const accountsFile = path.join(__dirname, 'accounts.json');
+        if (!fs.existsSync(accountsFile)) {
+            throw new Error('accounts.json file not found. Please create it with your account configurations.');
+        }
+
+        console.log('Loading accounts from accounts.json...');
+        const accounts = JSON.parse(fs.readFileSync(accountsFile, 'utf8'));
+
+        if (!Array.isArray(accounts) || accounts.length === 0) {
+            throw new Error('accounts.json must contain an array of account configurations.');
+        }
+
+        return accounts;
+    }
+
+    async runAll() {
+        console.log(`Starting checks for ${this.accounts.length} account(s)...`);
+
+        const results = [];
+
+        for (const accountConfig of this.accounts) {
+            try {
+                console.log(`\n--- Checking account: ${accountConfig.login} ---`);
+                const checker = new PIOChecker(accountConfig);
+                await checker.run();
+                results.push({ accountId: accountConfig.login, status: 'success' });
+
+                // Add delay between accounts to avoid overwhelming the server
+                if (this.accounts.length > 1) {
+                    console.log('Waiting 3 seconds before next account...');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            } catch (error) {
+                console.error(`Failed to check account ${accountConfig.login}:`, error);
+                results.push({ accountId: accountConfig.login, status: 'error', error: error.message });
+            }
+        }
+
+        console.log('\n--- Summary ---');
+        results.forEach(result => {
+            const status = result.status === 'success' ? '✅' : '❌';
+            console.log(`${status} ${result.accountId}: ${result.status}`);
+            if (result.error) {
+                console.log(`   Error: ${result.error}`);
+            }
+        });
+
+        return results;
+    }
+
+    async runSingle(accountId) {
+        const accountConfig = this.accounts.find(acc => acc.login === accountId);
+        if (!accountConfig) {
+            throw new Error(`Account with login '${accountId}' not found`);
+        }
+
+        console.log(`Checking single account: ${accountId}`);
+        const checker = new PIOChecker(accountConfig);
+        await checker.run();
+    }
 }
 
-module.exports = PIOChecker;
+// Run the checker
+if (require.main === module) {
+    const multiChecker = new MultiAccountChecker();
+
+    // Check if a specific account ID was provided as command line argument
+    const accountId = process.argv[2];
+
+    if (accountId) {
+        multiChecker.runSingle(accountId).catch(console.error);
+    } else {
+        multiChecker.runAll().catch(console.error);
+    }
+}
+
+module.exports = { PIOChecker, MultiAccountChecker };

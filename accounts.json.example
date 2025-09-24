@@ -1,0 +1,27 @@
+[
+  {
+    "id": "account1",
+    "login": "your_username_1",
+    "password": "your_password_1",
+    "elementText": "application_number_1",
+    "gmailUser": "your_email_1@gmail.com",
+    "gmailPass": "your_app_password_1"
+  },
+  {
+    "id": "account2",
+    "login": "your_username_2",
+    "password": "your_password_2",
+    "elementText": "application_number_2",
+    "gmailUser": "your_email_2@gmail.com",
+    "gmailPass": "your_app_password_2"
+  },
+  {
+    "id": "account3",
+    "login": "your_username_3",
+    "password": "your_password_3",
+    "elementText": "application_number_3",
+    "gmailUser": "your_email_3@gmail.com",
+    "gmailPass": "your_app_password_3"
+  }
+]
+

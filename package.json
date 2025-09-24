@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node pio-checker.js",
     "check": "node pio-checker.js",
+    "check:all": "node pio-checker.js",
+    "check:single": "node pio-checker.js",
     "test": "node test.js"
   },
   "dependencies": {
