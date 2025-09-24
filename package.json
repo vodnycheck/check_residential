@@ -2,13 +2,17 @@
   "name": "pio-website-checker",
   "version": "1.0.0",
   "description": "Automated PIO website checker with data comparison and macOS notifications",
-  "main": "pio-checker.js",
+  "main": "dist/pio-checker.js",
   "scripts": {
-    "start": "node pio-checker.js",
-    "check": "node pio-checker.js",
-    "check:all": "node pio-checker.js",
-    "check:single": "node pio-checker.js",
-    "test": "node test.js"
+    "build": "tsc",
+    "start": "npm run build && node dist/pio-checker.js",
+    "dev": "tsx src/pio-checker.ts",
+    "check": "npm run build && node dist/pio-checker.js",
+    "check:all": "npm run build && node dist/pio-checker.js",
+    "check:single": "npm run build && node dist/pio-checker.js",
+    "test": "npm run build && node dist/test.js",
+    "test:ts": "tsx src/test.ts",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "dotenv": "^17.2.2",
@@ -25,5 +29,13 @@
     "pio"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/node-notifier": "^8.0.5",
+    "@types/nodemailer": "^7.0.1",
+    "@types/puppeteer": "^5.4.7",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
 }
