@@ -6,12 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/pio-checker.js",
-    "dev": "tsx src/pio-checker.ts",
-    "check": "npm run build && node dist/pio-checker.js",
-    "check:all": "npm run build && node dist/pio-checker.js",
-    "check:single": "npm run build && node dist/pio-checker.js",
     "test": "npm run build && node dist/test.js",
-    "test:ts": "tsx src/test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

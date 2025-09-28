@@ -92,7 +92,7 @@ class PIOChecker {
 
                 browser = await puppeteer.launch({
                     headless: false,
-                    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                    // Using Puppeteer's bundled Chromium instead of system Chrome
                     timeout: 0,
                     protocolTimeout: 240000,
                     args: [
