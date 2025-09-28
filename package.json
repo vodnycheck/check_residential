@@ -1,13 +1,18 @@
 {
   "name": "pio-website-checker",
   "version": "1.0.0",
-  "description": "Automated PIO website checker with data comparison and macOS notifications",
+  "description": "Automated PIO website checker with data comparison and cross-platform notifications",
   "main": "dist/pio-checker.js",
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/pio-checker.js",
     "test": "npm run build && node dist/test.js",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "dev": "tsx src/pio-checker.ts",
+    "test:ts": "tsx src/tests/test.ts",
+    "test:email": "tsx src/tests/test-email.ts",
+    "test:notification": "tsx src/tests/test-notification.ts",
+    "test:notify": "tsx src/tests/test-notification.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.2",
