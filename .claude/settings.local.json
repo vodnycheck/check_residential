@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(npm install)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run test:email:*)",
+      "Bash(node:*)",
+      "Bash(npm run test:notification:*)",
+      "Bash(npm run build:electron:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:exe:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

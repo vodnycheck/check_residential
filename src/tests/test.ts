@@ -1,4 +1,4 @@
-import { PIOChecker, MultiAccountChecker } from './pio-checker';
+import { PIOChecker, MultiAccountChecker } from '../pio-checker';
 
 // Simple test to verify TypeScript compilation and basic functionality
 async function runTests(): Promise<void> {

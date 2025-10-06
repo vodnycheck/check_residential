@@ -7,10 +7,16 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+// Get the correct data directory - always use project directory for consistency
+function getDataDirectory(): string {
+    return process.cwd();
+}
+
 interface AccountConfig {
     login: string;
     password: string;
     elementText: string;
+    headless?: boolean;
 }
 
 interface TableData {
@@ -39,17 +45,19 @@ class PIOChecker {
     private login: string;
     private password: string;
     private elementText: string;
+    private headless: boolean;
     private gmailUser: string | undefined;
     private gmailPass: string | undefined;
     private mailTransporter: nodemailer.Transporter | null = null;
 
     constructor(accountConfig: AccountConfig) {
         this.accountId = accountConfig.login; // Use login as account ID
-        // Use project root for data directory instead of compiled directory
-        this.dataDir = path.join(process.cwd(), 'data', this.accountId);
+        // Use appropriate data directory based on context (Electron or Node)
+        this.dataDir = path.join(getDataDirectory(), 'data', this.accountId);
         this.login = accountConfig.login;
         this.password = accountConfig.password;
         this.elementText = accountConfig.elementText;
+        this.headless = accountConfig.headless !== undefined ? accountConfig.headless : true;
 
         // Gmail configuration from environment variables
         this.gmailUser = process.env.mail;
@@ -91,7 +99,7 @@ class PIOChecker {
                 console.log(`Attempt ${attempt}/${retries}: Launching browser...`);
 
                 browser = await puppeteer.launch({
-                    headless: false,
+                    headless: this.headless,
                     // Using Puppeteer's bundled Chromium instead of system Chrome
                     timeout: 0,
                     protocolTimeout: 240000,
@@ -315,7 +323,14 @@ class PIOChecker {
     }
 
     saveData(data: ScrapedData): string {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const now = new Date();
+        // Format as local time: YYYY-MM-DDTHH-MM-SS
+        const timestamp = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0') + 'T' +
+            String(now.getHours()).padStart(2, '0') + '-' +
+            String(now.getMinutes()).padStart(2, '0') + '-' +
+            String(now.getSeconds()).padStart(2, '0');
         const filename = `szczegoly-wniosku_${timestamp}.json`;
         const filepath = path.join(this.dataDir, filename);
 
@@ -546,14 +561,16 @@ class PIOChecker {
 
 class MultiAccountChecker {
     private accounts: AccountConfig[];
+    private headless: boolean;
 
-    constructor() {
+    constructor(headless: boolean = true) {
+        this.headless = headless;
         this.accounts = this.loadAccountsConfig();
     }
 
     loadAccountsConfig() {
-        // Look for accounts.json in the project root, not in the compiled directory
-        const accountsFile = path.join(process.cwd(), 'accounts.json');
+        // Use appropriate directory based on context (Electron or Node)
+        const accountsFile = path.join(getDataDirectory(), 'accounts.json');
         if (!fs.existsSync(accountsFile)) {
             throw new Error('accounts.json file not found. Please create it with your account configurations.');
         }
@@ -565,7 +582,11 @@ class MultiAccountChecker {
             throw new Error('accounts.json must contain an array of account configurations.');
         }
 
-        return accounts;
+        // Inject headless setting into all accounts
+        return accounts.map(acc => ({
+            ...acc,
+            headless: this.headless
+        }));
     }
 
     async runAll() {

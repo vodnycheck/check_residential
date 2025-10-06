@@ -322,3 +322,4 @@ Temporary Items
 # Config files (uncomment if you want to ignore them)
 # config.json
 # config.js
+/release/

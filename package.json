@@ -2,7 +2,7 @@
   "name": "pio-website-checker",
   "version": "1.0.0",
   "description": "Automated PIO website checker with data comparison and cross-platform notifications",
-  "main": "dist/pio-checker.js",
+  "main": "dist/electron/main.js",
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/pio-checker.js",
@@ -12,10 +12,17 @@
     "test:ts": "tsx src/tests/test.ts",
     "test:email": "tsx src/tests/test-email.ts",
     "test:notification": "tsx src/tests/test-notification.ts",
-    "test:notify": "tsx src/tests/test-notification.ts"
+    "test:notify": "tsx src/tests/test-notification.ts",
+    "electron": "npm run build:electron && electron .",
+    "build:electron": "tsc",
+    "electron:dev": "electron .",
+    "dist": "npm run build:electron && electron-builder",
+    "dist:win": "npm run build:electron && electron-builder --win",
+    "build:exe": "npm run build:electron && electron-builder --win"
   },
   "dependencies": {
     "dotenv": "^17.2.2",
+    "node-cron": "^4.2.1",
     "node-notifier": "^10.0.1",
     "nodemailer": "^7.0.6",
     "puppeteer": "^21.3.6"
@@ -32,10 +39,42 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^24.5.2",
+    "@types/node-cron": "^3.0.11",
     "@types/node-notifier": "^8.0.5",
     "@types/nodemailer": "^7.0.1",
     "@types/puppeteer": "^5.4.7",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
+  },
+  "build": {
+    "appId": "com.pio.checker",
+    "productName": "PIO Website Checker",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "public/**/*",
+      "assets/**/*",
+      "node_modules/**/*",
+      ".env.example"
+    ],
+    "extraResources": [
+      {
+        "from": "accounts.example.json",
+        "to": "accounts.json"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
